@@ -20,7 +20,1246 @@
 
         html, body {
             margin: 0;
+            padding: 0;<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zeynep</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Türkçe karakter destekli (latin-ext) Cormorant Garamond fontu -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        /* Temel sıfırlama ve saf siyah stüdyo arka planı */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            margin: 0;
             padding: 0;
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
+            overflow: hidden;
+            background-color: #000000;
+            color: #f4ece1;
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            user-select: none;
+        }
+
+        /* 1. ve 2. Adım: Saf siyah tam ekran geçiş katmanları */
+        .step-screen {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #000000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+            z-index: 20;
+            padding: 1.5rem;
+        }
+
+        .step-screen.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Sade, zarif, koyu stüdyo lüksü oval (pill) buton */
+        .pill-btn {
+            border-radius: 9999px;
+            border: 1px solid rgba(245, 236, 220, 0.35);
+            background: rgba(245, 236, 220, 0.03);
+            color: #f4ece1;
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-weight: 300;
+            letter-spacing: 0.06em;
+            padding: 0.95rem 2.6rem;
+            font-size: clamp(1.2rem, 3.2vw, 1.55rem);
+            line-height: 1.2;
+            cursor: pointer;
+            outline: none;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 0 28px rgba(245, 236, 220, 0.04);
+            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+                        border-color 0.35s ease,
+                        background-color 0.35s ease,
+                        box-shadow 0.4s ease,
+                        color 0.35s ease;
+        }
+
+        .pill-btn:hover,
+        .pill-btn:focus-visible {
+            transform: scale(1.035);
+            border-color: rgba(245, 236, 220, 0.72);
+            background: rgba(245, 236, 220, 0.08);
+            box-shadow: 0 0 36px rgba(245, 236, 220, 0.14), inset 0 0 14px rgba(245, 236, 220, 0.05);
+            color: #ffffff;
+        }
+
+        .pill-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* 3. Adım: Ana Kasımpatı Sahnesi */
+        #mainScene {
+            position: fixed;
+            inset: 0;
+            background-color: #000000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+            z-index: 10;
+        }
+
+        #mainScene.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Tam ekran yüksek DPI botanik canvas */
+        #botanicalCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            inset: 0;
+            cursor: pointer;
+            touch-action: none;
+        }
+
+        /* Kenar mesaj alanı yumuşak görünme animasyonu */
+        .poetic-note {
+            opacity: 0;
+            transform: translateY(16px);
+            transition: opacity 2.2s cubic-bezier(0.22, 1, 0.36, 1),
+                        transform 2.2s cubic-bezier(0.22, 1, 0.36, 1);
+            pointer-events: none;
+        }
+
+        .poetic-note.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Sıcak fildişi metin stili */
+        .ivory-text {
+            color: #f4ece1;
+            text-shadow: 0 2px 24px rgba(244, 236, 225, 0.15), 0 2px 10px rgba(0, 0, 0, 0.95);
+        }
+
+        /* İnce altın çizgi aksanı */
+        .gold-hairline {
+            height: 1px;
+            background: linear-gradient(90deg, rgba(212, 180, 120, 0.62) 0%, rgba(212, 180, 120, 0.2) 55%, rgba(212, 180, 120, 0) 100%);
+        }
+
+        @media (max-width: 767px) {
+            .gold-hairline {
+                background: linear-gradient(90deg, rgba(212, 180, 120, 0) 0%, rgba(212, 180, 120, 0.52) 50%, rgba(212, 180, 120, 0) 100%);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Tamamen görünmez arka plan müziği öğesi -->
+    <audio id="bgMusic" playsinline preload="auto" crossorigin="anonymous" style="display:none;"></audio>
+
+    <!-- ADIM 1: İlk Karşılama Ekranı -->
+    <section id="step1" class="step-screen active" aria-label="Karşılama">
+        <button id="btnStep1" type="button" class="pill-btn">Zeynep sen misin ?</button>
+    </section>
+
+    <!-- ADIM 2: İkinci Onay Ekranı -->
+    <section id="step2" class="step-screen" aria-label="Onay" aria-hidden="true">
+        <button id="btnStep2" type="button" class="pill-btn">Açacak mısın ?</button>
+    </section>
+
+    <!-- ADIM 3: Saf Siyah Üzerinde Gerçekçi Kasımpatı Demetleri ve Tek Not -->
+    <main id="mainScene" aria-hidden="true">
+        <canvas id="botanicalCanvas" aria-label="Siyah arka plan üzerinde açan gerçekçi kasımpatı demetleri"></canvas>
+
+        <!-- Mobilde üst siyah boşlukta, masaüstünde sol / sol-alt siyah boşlukta -->
+        <aside id="poeticNote" class="poetic-note fixed z-10 top-[7vh] left-1/2 -translate-x-1/2 w-[88%] max-w-md text-center md:top-auto md:bottom-[15vh] md:left-[6vw] md:translate-x-0 md:w-[34vw] md:max-w-[410px] md:text-left">
+            <div class="gold-hairline w-24 md:w-28 mx-auto md:mx-0 mb-4 opacity-80"></div>
+            <p class="italic font-light text-[22px] sm:text-[26px] md:text-[31px] lg:text-[35px] leading-[1.38] tracking-[0.02em] ivory-text">
+                Elden veremediğim için kusura bakma şuanlık böyle idare etsen olur mu ?
+            </p>
+            <div class="gold-hairline w-14 md:w-20 mx-auto md:mx-0 mt-5 opacity-60"></div>
+        </aside>
+    </main>
+
+    <script>
+        /**
+         * =========================================================================
+         * 1. GİZLİ ARKA PLAN MÜZİK MOTORU (30 SANİYELİK OTOMATİK DÖNGÜ)
+         * Şarkı: Ağlama Ben Ağlarım (Harbiye 2026) - Canozan & Dedublüman (ID: 6827508235)
+         * Öncelik: 1) Aynı klasörde muzik.mp3 varsa onu kullanır
+         *          2) Yoksa CORS sorunu olmadan JSONP ile resmi 30sn Apple Music
+         *             previewUrl adresini çeker ve Adım 2 tıklamasında başlatır.
+         * =========================================================================
+         */
+        (() => {
+            const bgMusic = document.getElementById('bgMusic');
+            const step1 = document.getElementById('step1');
+            const step2 = document.getElementById('step2');
+            const btnStep1 = document.getElementById('btnStep1');
+            const btnStep2 = document.getElementById('btnStep2');
+            const mainScene = document.getElementById('mainScene');
+            const canvas = document.getElementById('botanicalCanvas');
+            const ctx = canvas.getContext('2d');
+            const poeticNote = document.getElementById('poeticNote');
+
+            let resolvedAudioUrl = null;
+            let shouldPlayWhenReady = false;
+            let musicStarted = false;
+            let corsRetried = false;
+            let fadeRafId = null;
+
+            /**
+             * JSONP ile harici API'den CORS hatası almadan veri çeker.
+             */
+            function fetchJsonp(url, callbackName, timeoutMs = 6000) {
+                return new Promise((resolve) => {
+                    let settled = false;
+                    const script = document.createElement('script');
+                    script.async = true;
+
+                    const cleanup = () => {
+                        if (script.parentNode) script.parentNode.removeChild(script);
+                        try { delete window[callbackName]; } catch (e) { window[callbackName] = undefined; }
+                    };
+
+                    const timer = setTimeout(() => {
+                        if (!settled) {
+                            settled = true;
+                            cleanup();
+                            resolve(null);
+                        }
+                    }, timeoutMs);
+
+                    window[callbackName] = (data) => {
+                        if (!settled) {
+                            settled = true;
+                            clearTimeout(timer);
+                            cleanup();
+                            resolve(data);
+                        }
+                    };
+
+                    script.onerror = () => {
+                        if (!settled) {
+                            settled = true;
+                            clearTimeout(timer);
+                            cleanup();
+                            resolve(null);
+                        }
+                    };
+
+                    script.src = url;
+                    document.head.appendChild(script);
+                });
+            }
+
+            /**
+             * iTunes yanıtından geçerli previewUrl adresini çıkarır.
+             */
+            function extractPreviewUrl(data) {
+                if (!data || !Array.isArray(data.results) || data.results.length === 0) return null;
+                const match = data.results.find((item) => item && item.previewUrl);
+                return match ? match.previewUrl : null;
+            }
+
+            /**
+             * Sayfa açılır açılmaz (Adım 1/2 sırasında) ses kaynağını sessizce önceden hazırlar.
+             */
+            async function preloadAudioSource() {
+                // 1. Aynı klasörde muzik.mp3 dosyası var mı kontrol et
+                try {
+                    const res = await fetch('muzik.mp3', { method: 'HEAD', cache: 'no-store' });
+                    if (res && res.ok) {
+                        setAudioSource('muzik.mp3');
+                        return;
+                    }
+                } catch (err) {
+                    // Yerel dosya protokolü veya dosya yok; iTunes JSONP'ye geç
+                }
+
+                // 2. Birincil JSONP sorgusu (TR mağazası, Track ID: 6827508235)
+                const data1 = await fetchJsonp(
+                    'https://itunes.apple.com/lookup?id=6827508235&country=tr&callback=__itunesCb1',
+                    '__itunesCb1'
+                );
+                let url = extractPreviewUrl(data1);
+
+                // 3. Yedek JSONP sorgusu (Genel mağaza, Track ID: 6827508235)
+                if (!url) {
+                    const data2 = await fetchJsonp(
+                        'https://itunes.apple.com/lookup?id=6827508235&callback=__itunesCb2',
+                        '__itunesCb2'
+                    );
+                    url = extractPreviewUrl(data2);
+                }
+
+                // 4. İkinci yedek JSONP arama sorgusu
+                if (!url) {
+                    const data3 = await fetchJsonp(
+                        'https://itunes.apple.com/search?term=Canozan+Dedubluman+Aglama+Ben+Aglarim&country=tr&entity=song&limit=5&callback=__itunesCb3',
+                        '__itunesCb3'
+                    );
+                    url = extractPreviewUrl(data3);
+                }
+
+                if (url) {
+                    setAudioSource(url);
+                }
+            }
+
+            /**
+             * Bulunan ses kaynağını gizli audio öğesine bağlar; kullanıcı zaten tıkladıysa hemen başlatır.
+             */
+            function setAudioSource(url) {
+                resolvedAudioUrl = url;
+                bgMusic.src = url;
+                bgMusic.load();
+
+                if (shouldPlayWhenReady && !musicStarted) {
+                    startMusicWithFadeIn();
+                }
+            }
+
+            /**
+             * Sesi 0.0 -> 0.85 aralığında ~1.8 saniyede yumuşakça yükseltir.
+             */
+            function fadeInVolume(targetVol = 0.85, durationMs = 1800) {
+                if (fadeRafId) cancelAnimationFrame(fadeRafId);
+                bgMusic.volume = 0;
+                const start = performance.now();
+
+                function step(now) {
+                    const t = Math.min(1, (now - start) / durationMs);
+                    // Yumuşak eğri (easeOutCubic)
+                    const eased = 1 - Math.pow(1 - t, 3);
+                    try {
+                        bgMusic.volume = Math.max(0, Math.min(1, eased * targetVol));
+                    } catch (e) {
+                        // iOS Safari ses kontrolü donanım üzerinden yapıldığında sessizce yoksay
+                    }
+                    if (t < 1 && !bgMusic.paused) {
+                        fadeRafId = requestAnimationFrame(step);
+                    }
+                }
+                fadeRafId = requestAnimationFrame(step);
+            }
+
+            /**
+             * Müziği başlatır ve 30 saniyelik sonsuz döngüye sokar.
+             */
+            function startMusicWithFadeIn() {
+                if (!resolvedAudioUrl) return;
+                bgMusic.currentTime = 0;
+                const playPromise = bgMusic.play();
+                if (playPromise && typeof playPromise.then === 'function') {
+                    playPromise.then(() => {
+                        musicStarted = true;
+                        fadeInVolume(0.85, 1800);
+                    }).catch(() => {
+                        // Eğer CORS başlığı nedeniyle oynatma reddedildiyse crossorigin olmadan tekrar dene
+                        if (!corsRetried && bgMusic.hasAttribute('crossorigin')) {
+                            corsRetried = true;
+                            bgMusic.removeAttribute('crossorigin');
+                            bgMusic.src = resolvedAudioUrl;
+                            bgMusic.load();
+                            bgMusic.play().then(() => {
+                                musicStarted = true;
+                                fadeInVolume(0.85, 1800);
+                            }).catch(() => {});
+                        }
+                    });
+                } else {
+                    musicStarted = true;
+                    fadeInVolume(0.85, 1800);
+                }
+            }
+
+            /**
+             * Kullanıcı "Açacak mısın ?" butonuna bastığında doğrudan jest içinde çağrılır.
+             * JSONP henüz bitmediyse audio öğesini kilitsiz hale getirir.
+             */
+            function triggerAudioOnGesture() {
+                shouldPlayWhenReady = true;
+
+                if (resolvedAudioUrl) {
+                    startMusicWithFadeIn();
+                } else {
+                    // İstek hâlâ sürüyorsa tarayıcının autoplay kilidini kullanıcı jestiyle aç
+                    try {
+                        bgMusic.volume = 0;
+                        bgMusic.play().catch(() => {});
+                    } catch (e) {}
+                }
+            }
+
+            // CORS kaynaklı yükleme hatası olursa crossorigin özniteliğini kaldırıp otomatik tekrar dene
+            bgMusic.addEventListener('error', () => {
+                if (!corsRetried && resolvedAudioUrl && bgMusic.hasAttribute('crossorigin')) {
+                    corsRetried = true;
+                    bgMusic.removeAttribute('crossorigin');
+                    bgMusic.src = resolvedAudioUrl;
+                    bgMusic.load();
+                    if (shouldPlayWhenReady) {
+                        startMusicWithFadeIn();
+                    }
+                }
+            });
+
+            // Kesintisiz 30 saniye döngüsü (hem timeupdate hem ended ile garanti altına alınır)
+            bgMusic.addEventListener('timeupdate', () => {
+                if (bgMusic.currentTime >= 30) {
+                    bgMusic.currentTime = 0;
+                    if (bgMusic.paused) {
+                        bgMusic.play().catch(() => {});
+                    }
+                }
+            });
+
+            bgMusic.addEventListener('ended', () => {
+                bgMusic.currentTime = 0;
+                bgMusic.play().catch(() => {});
+            });
+
+            /**
+             * =========================================================================
+             * 2. 3 ADIMLI AKIŞ KONTROLÜ
+             * Adım 1 ("Zeynep sen misin ?") -> Adım 2 ("Açacak mısın ?") -> Adım 3 (Kasımpatılar)
+             * =========================================================================
+             */
+            let step1Done = false;
+            let step2Done = false;
+            let sceneStarted = false;
+
+            btnStep1.addEventListener('click', () => {
+                if (step1Done) return;
+                step1Done = true;
+
+                step1.classList.remove('active');
+                step1.setAttribute('aria-hidden', 'true');
+
+                // ~600ms yumuşak geçişin ardından 2. ekranı görünür yap
+                setTimeout(() => {
+                    step1.style.display = 'none';
+                    step2.setAttribute('aria-hidden', 'false');
+                    step2.classList.add('active');
+                }, 620);
+            });
+
+            btnStep2.addEventListener('click', () => {
+                if (step2Done) return;
+                step2Done = true;
+
+                // Doğrudan tıklama jesti içinde müziği başlat
+                triggerAudioOnGesture();
+
+                step2.classList.remove('active');
+                step2.setAttribute('aria-hidden', 'true');
+
+                setTimeout(() => {
+                    step2.style.display = 'none';
+                    mainScene.setAttribute('aria-hidden', 'false');
+                    mainScene.classList.add('active');
+                    startBouquetAnimation();
+                }, 620);
+            });
+
+            /**
+             * =========================================================================
+             * 3. GERÇEKÇİ ÇOKLU KASIMPATI DEMETLERİ BOTANİK RENDER MOTORU
+             * Saf siyah (#000000) stüdyo ışığı, 3 doğal demet, 10 tam açan kasımpatı +
+             * 4 tomurcuk, altın açı (137.508°) ile 140-180 katmanlı taç yaprakları ve
+             * derin loblu gerçekçi kasımpatı yaprakları.
+             * =========================================================================
+             */
+            const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+            const lerp = (a, b, t) => a + (b - a) * t;
+            const easeOutCubic = t => 1 - Math.pow(1 - clamp(t, 0, 1), 3);
+            const easeOutQuint = t => 1 - Math.pow(1 - clamp(t, 0, 1), 5);
+            const easeInOutSine = t => -(Math.cos(Math.PI * clamp(t, 0, 1)) - 1) / 2;
+            const GOLDEN_ANGLE = 2.399963229728653; // 137.507764° radyan
+            const STUDIO_LIGHT_ANGLE = -Math.PI * 0.72; // Sol-üst stüdyo ışığı yönü
+
+            function seededRandom(seed) {
+                let s = seed % 2147483647;
+                if (s <= 0) s += 2147483646;
+                return () => {
+                    s = (s * 16807) % 2147483647;
+                    return (s - 1) / 2147483646;
+                };
+            }
+
+            // Doğal kasımpatı demeti renk tonları: Sıcak fildişi, pudra pembe ve şampanya sarısı
+            const VARIETIES = {
+                ivory: {
+                    shadowBase: [72, 68, 62],
+                    midBody: [218, 212, 200],
+                    tipLight: [252, 249, 242],
+                    heartBase: [132, 118, 66],
+                    heartTip: [232, 214, 148],
+                    vein: [255, 253, 248]
+                },
+                blush: {
+                    shadowBase: [96, 46, 60],
+                    midBody: [212, 152, 166],
+                    tipLight: [250, 224, 230],
+                    heartBase: [138, 64, 78],
+                    heartTip: [238, 192, 186],
+                    vein: [255, 240, 244]
+                },
+                champagne: {
+                    shadowBase: [112, 74, 30],
+                    midBody: [216, 174, 98],
+                    tipLight: [252, 234, 182],
+                    heartBase: [128, 76, 20],
+                    heartTip: [240, 196, 102],
+                    vein: [255, 246, 214]
+                }
+            };
+
+            function shadeRgb(rgb, mul, alpha = 1) {
+                const r = clamp(Math.round(rgb[0] * mul), 0, 255);
+                const g = clamp(Math.round(rgb[1] * mul), 0, 255);
+                const b = clamp(Math.round(rgb[2] * mul), 0, 255);
+                return `rgba(${r},${g},${b},${alpha})`;
+            }
+
+            let width = window.innerWidth;
+            let height = window.innerHeight;
+            let dpr = Math.min(window.devicePixelRatio || 1, 2);
+            let animStartTime = 0;
+            let noteRevealed = false;
+
+            let flowers = [];
+            let dustMotes = [];
+            let fallingPetals = [];
+
+            /**
+             * 3 ayrı doğal kasımpatı demetini (10 tam çiçek + 4 tomurcuk) ekran boyutuna göre kurar.
+             */
+            function buildBouquets() {
+                const isMobile = width < 768;
+                const minDim = Math.min(width, height);
+                const baseR = isMobile
+                    ? clamp(minDim * 0.145, 48, 72)
+                    : clamp(minDim * 0.115, 62, 102);
+
+                const anchors = isMobile
+                    ? {
+                        backLeft:  { x: width * 0.30, y: height + 24 },
+                        heroMain:  { x: width * 0.52, y: height + 26 },
+                        rightSide: { x: width * 0.74, y: height + 24 }
+                    }
+                    : {
+                        backLeft:  { x: width * 0.52, y: height + 30 },
+                        heroMain:  { x: width * 0.67, y: height + 34 },
+                        rightSide: { x: width * 0.80, y: height + 30 }
+                    };
+
+                const specs = isMobile
+                    ? [
+                        // Demet 1: Arka Sol Küme
+                        { bunch: 'backLeft',  rx: 0.18, ry: 0.50, rMul: 0.76, depth: 0.68, role: 'blush',     bud: false, seed: 101, tilt: -0.25, delay: 0.25 },
+                        { bunch: 'backLeft',  rx: 0.33, ry: 0.43, rMul: 0.84, depth: 0.75, role: 'ivory',     bud: false, seed: 102, tilt: -0.10, delay: 0.15 },
+                        { bunch: 'backLeft',  rx: 0.26, ry: 0.62, rMul: 0.72, depth: 0.78, role: 'champagne', bud: false, seed: 103, tilt: -0.18, delay: 0.40 },
+                        { bunch: 'backLeft',  rx: 0.14, ry: 0.64, rMul: 0.36, depth: 0.72, role: 'ivory',     bud: true,  seed: 104, tilt: -0.42, delay: 0.50 },
+
+                        // Demet 3: Sağ Zarif Küme
+                        { bunch: 'rightSide', rx: 0.79, ry: 0.47, rMul: 0.82, depth: 0.80, role: 'ivory',     bud: false, seed: 301, tilt: 0.22,  delay: 0.22 },
+                        { bunch: 'rightSide', rx: 0.86, ry: 0.60, rMul: 0.76, depth: 0.85, role: 'blush',     bud: false, seed: 302, tilt: 0.30,  delay: 0.38 },
+                        { bunch: 'rightSide', rx: 0.72, ry: 0.66, rMul: 0.78, depth: 0.88, role: 'champagne', bud: false, seed: 303, tilt: 0.16,  delay: 0.48 },
+                        { bunch: 'rightSide', rx: 0.88, ry: 0.41, rMul: 0.34, depth: 0.76, role: 'champagne', bud: true,  seed: 304, tilt: 0.45,  delay: 0.55 },
+
+                        // Demet 2: Ana Merkez Demet (Ön Plan)
+                        { bunch: 'heroMain',  rx: 0.53, ry: 0.39, rMul: 0.92, depth: 0.92, role: 'champagne', bud: false, seed: 201, tilt: 0.04,  delay: 0.08 },
+                        { bunch: 'heroMain',  rx: 0.42, ry: 0.55, rMul: 0.96, depth: 0.96, role: 'blush',     bud: false, seed: 202, tilt: -0.08, delay: 0.18 },
+                        { bunch: 'heroMain',  rx: 0.61, ry: 0.54, rMul: 1.06, depth: 1.00, role: 'ivory',     bud: false, seed: 203, tilt: 0.06,  delay: 0.00 },
+                        { bunch: 'heroMain',  rx: 0.48, ry: 0.70, rMul: 0.84, depth: 0.98, role: 'ivory',     bud: false, seed: 204, tilt: -0.04, delay: 0.32 },
+                        { bunch: 'heroMain',  rx: 0.39, ry: 0.35, rMul: 0.35, depth: 0.82, role: 'blush',     bud: true,  seed: 205, tilt: -0.22, delay: 0.42 },
+                        { bunch: 'heroMain',  rx: 0.67, ry: 0.36, rMul: 0.34, depth: 0.84, role: 'ivory',     bud: true,  seed: 206, tilt: 0.24,  delay: 0.46 }
+                    ]
+                    : [
+                        // Demet 1: Arka Sol-Orta Küme
+                        { bunch: 'backLeft',  rx: 0.46, ry: 0.38, rMul: 0.80, depth: 0.68, role: 'blush',     bud: false, seed: 101, tilt: -0.22, delay: 0.24 },
+                        { bunch: 'backLeft',  rx: 0.55, ry: 0.26, rMul: 0.86, depth: 0.74, role: 'ivory',     bud: false, seed: 102, tilt: -0.10, delay: 0.14 },
+                        { bunch: 'backLeft',  rx: 0.49, ry: 0.55, rMul: 0.74, depth: 0.78, role: 'champagne', bud: false, seed: 103, tilt: -0.16, delay: 0.38 },
+                        { bunch: 'backLeft',  rx: 0.41, ry: 0.48, rMul: 0.36, depth: 0.70, role: 'ivory',     bud: true,  seed: 104, tilt: -0.40, delay: 0.50 },
+
+                        // Demet 3: Sağ Zarif Küme
+                        { bunch: 'rightSide', rx: 0.82, ry: 0.35, rMul: 0.86, depth: 0.80, role: 'ivory',     bud: false, seed: 301, tilt: 0.20,  delay: 0.20 },
+                        { bunch: 'rightSide', rx: 0.88, ry: 0.50, rMul: 0.80, depth: 0.86, role: 'blush',     bud: false, seed: 302, tilt: 0.28,  delay: 0.34 },
+                        { bunch: 'rightSide', rx: 0.78, ry: 0.60, rMul: 0.82, depth: 0.90, role: 'champagne', bud: false, seed: 303, tilt: 0.14,  delay: 0.44 },
+                        { bunch: 'rightSide', rx: 0.89, ry: 0.25, rMul: 0.34, depth: 0.75, role: 'champagne', bud: true,  seed: 304, tilt: 0.42,  delay: 0.54 },
+
+                        // Demet 2: Ana Merkez Demet (Ön Plan)
+                        { bunch: 'heroMain',  rx: 0.67, ry: 0.23, rMul: 0.92, depth: 0.90, role: 'champagne', bud: false, seed: 201, tilt: 0.05,  delay: 0.08 },
+                        { bunch: 'heroMain',  rx: 0.59, ry: 0.44, rMul: 0.98, depth: 0.95, role: 'blush',     bud: false, seed: 202, tilt: -0.07, delay: 0.16 },
+                        { bunch: 'heroMain',  rx: 0.71, ry: 0.42, rMul: 1.08, depth: 1.00, role: 'ivory',     bud: false, seed: 203, tilt: 0.06,  delay: 0.00 },
+                        { bunch: 'heroMain',  rx: 0.64, ry: 0.62, rMul: 0.88, depth: 0.97, role: 'ivory',     bud: false, seed: 204, tilt: -0.04, delay: 0.30 },
+                        { bunch: 'heroMain',  rx: 0.58, ry: 0.16, rMul: 0.34, depth: 0.82, role: 'blush',     bud: true,  seed: 205, tilt: -0.22, delay: 0.42 },
+                        { bunch: 'heroMain',  rx: 0.76, ry: 0.21, rMul: 0.35, depth: 0.84, role: 'ivory',     bud: true,  seed: 206, tilt: 0.24,  delay: 0.46 }
+                    ];
+
+                specs.sort((a, b) => a.depth - b.depth);
+
+                flowers = specs.map((spec) => {
+                    const rand = seededRandom(spec.seed);
+                    const anchor = anchors[spec.bunch];
+                    const headX = width * spec.rx;
+                    const headY = height * spec.ry;
+                    const radius = baseR * spec.rMul;
+
+                    const curveOffset = (headX - anchor.x) * 0.28 + (rand() - 0.5) * radius * 0.9;
+                    const ctrlX = lerp(anchor.x, headX, 0.48) - curveOffset * 0.45;
+                    const ctrlY = lerp(anchor.y, headY, 0.54);
+
+                    // Sap üzerindeki derin loblu kasımpatı yaprakları
+                    const leafCount = spec.bud ? 1 : (spec.depth > 0.85 ? 3 : 2);
+                    const leaves = [];
+                    for (let l = 0; l < leafCount; l++) {
+                        const t = 0.28 + l * 0.21 + rand() * 0.08;
+                        const side = (l % 2 === 0 ? -1 : 1) * (spec.tilt >= 0 ? 1 : -1);
+                        leaves.push({
+                            t: clamp(t, 0.22, 0.76),
+                            side,
+                            angleOffset: side * (0.55 + rand() * 0.55),
+                            size: radius * (0.58 + rand() * 0.32)
+                        });
+                    }
+
+                    // Altın açı (137.508°) filotaksi ile 140-180 katmanlı taç yaprağı
+                    const petalCount = spec.bud ? 50 : Math.floor(140 + spec.rMul * 38);
+                    const petals = [];
+                    for (let i = 0; i < petalCount; i++) {
+                        const frac = i / (petalCount - 1);
+                        const angle = i * GOLDEN_ANGLE + (rand() - 0.5) * 0.08;
+
+                        const lenNorm = spec.bud
+                            ? lerp(0.96, 0.22, Math.pow(frac, 0.85))
+                            : lerp(1.04, 0.16, Math.pow(frac, 0.78));
+                        const widthNorm = spec.bud
+                            ? lerp(0.24, 0.14, frac)
+                            : lerp(0.145, 0.075, frac);
+
+                        const curl = (rand() - 0.5) * (spec.bud ? 0.18 : 0.36) * (1 - frac * 0.6);
+                        const cup = 0.55 + rand() * 0.45;
+                        const lightDot = Math.cos(angle - STUDIO_LIGHT_ANGLE);
+
+                        petals.push({
+                            frac,
+                            angle,
+                            lenNorm: lenNorm * (0.93 + rand() * 0.14),
+                            widthNorm: widthNorm * (0.88 + rand() * 0.24),
+                            curl,
+                            cup,
+                            lightDot,
+                            isHeart: frac > 0.74,
+                            openDelay: frac * 0.42 + rand() * 0.05
+                        });
+                    }
+
+                    return {
+                        ...spec,
+                        anchorX: anchor.x + (rand() - 0.5) * 18,
+                        anchorY: anchor.y,
+                        headX,
+                        headY,
+                        ctrlX,
+                        ctrlY,
+                        radius,
+                        leaves,
+                        petals,
+                        swayPhase: rand() * Math.PI * 2,
+                        swaySpeed: 0.55 + rand() * 0.35,
+                        impulse: 0,
+                        impulseVel: 0,
+                        variety: VARIETIES[spec.role] || VARIETIES.ivory,
+                        cacheCanvas: document.createElement('canvas'),
+                        cacheValid: false,
+                        cacheSize: 0
+                    };
+                });
+            }
+
+            /**
+             * Havada çok yavaş süzülen sıcak altın toz zerrelerini oluşturur.
+             */
+            function initDustMotes() {
+                dustMotes = [];
+                const count = Math.min(28, Math.max(14, Math.floor((width * height) / 42000)));
+                for (let i = 0; i < count; i++) {
+                    dustMotes.push({
+                        x: Math.random() * width,
+                        y: Math.random() * height,
+                        vx: (Math.random() - 0.5) * 0.12,
+                        vy: -0.04 - Math.random() * 0.12,
+                        r: 0.6 + Math.random() * 1.35,
+                        alpha: 0.06 + Math.random() * 0.20,
+                        phase: Math.random() * Math.PI * 2
+                    });
+                }
+            }
+
+            function resizeCanvas() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+                canvas.width = Math.floor(width * dpr);
+                canvas.height = Math.floor(height * dpr);
+                canvas.style.width = `${width}px`;
+                canvas.style.height = `${height}px`;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+                buildBouquets();
+                initDustMotes();
+            }
+
+            /**
+             * Saf siyah stüdyo derinliği ve süzülen toz zerrelerini çizer.
+             */
+            function drawStudioAtmosphere(timeSec) {
+                const cx = width < 768 ? width * 0.52 : width * 0.66;
+                const cy = width < 768 ? height * 0.54 : height * 0.44;
+                const glowR = Math.max(width, height) * 0.56;
+                const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
+                bgGrad.addColorStop(0, 'rgba(24, 21, 19, 0.30)');
+                bgGrad.addColorStop(0.45, 'rgba(8, 7, 9, 0.12)');
+                bgGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = bgGrad;
+                ctx.fillRect(0, 0, width, height);
+
+                for (let i = 0; i < dustMotes.length; i++) {
+                    const d = dustMotes[i];
+                    d.x += d.vx + Math.sin(timeSec * 0.35 + d.phase) * 0.08;
+                    d.y += d.vy;
+
+                    if (d.y < -12) { d.y = height + 12; d.x = Math.random() * width; }
+                    if (d.x < -12) d.x = width + 12;
+                    if (d.x > width + 12) d.x = -12;
+
+                    const twinkle = 0.55 + 0.45 * Math.sin(timeSec * 0.85 + d.phase);
+                    const a = d.alpha * twinkle;
+                    const g = ctx.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.r * 2.8);
+                    g.addColorStop(0, `rgba(242, 218, 168, ${a.toFixed(3)})`);
+                    g.addColorStop(1, 'rgba(242, 218, 168, 0)');
+                    ctx.fillStyle = g;
+                    ctx.beginPath();
+                    ctx.arc(d.x, d.y, d.r * 2.8, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            /**
+             * Derin loblu ve damarlı botanik kasımpatı yaprağını çizer.
+             */
+            function drawChrysanthemumLeaf(x, y, angle, size, progress, depth) {
+                if (progress <= 0.01) return;
+                const p = easeOutCubic(progress);
+                const s = (size / 95) * p;
+                const shade = 0.52 + depth * 0.48;
+
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(angle);
+                ctx.scale(s, s);
+
+                const leafGrad = ctx.createLinearGradient(0, -24, 96, 20);
+                leafGrad.addColorStop(0, shadeRgb([16, 30, 18], shade));
+                leafGrad.addColorStop(0.45, shadeRgb([34, 58, 34], shade));
+                leafGrad.addColorStop(0.85, shadeRgb([52, 78, 44], shade));
+                leafGrad.addColorStop(1, shadeRgb([66, 92, 52], shade));
+
+                ctx.fillStyle = leafGrad;
+
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.bezierCurveTo(10, -4, 15, -18, 26, -24);
+                ctx.quadraticCurveTo(33, -27, 36, -15);
+                ctx.quadraticCurveTo(39, -11, 44, -13);
+                ctx.bezierCurveTo(49, -27, 60, -32, 68, -22);
+                ctx.quadraticCurveTo(71, -16, 68, -11);
+                ctx.bezierCurveTo(76, -16, 86, -12, 96, 0);
+                ctx.bezierCurveTo(86, 12, 76, 16, 68, 11);
+                ctx.quadraticCurveTo(71, 16, 68, 22);
+                ctx.bezierCurveTo(60, 32, 49, 27, 44, 13);
+                ctx.quadraticCurveTo(39, 11, 36, 15);
+                ctx.quadraticCurveTo(33, 27, 26, 24);
+                ctx.bezierCurveTo(15, 18, 10, 4, 0, 0);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.strokeStyle = shadeRgb([118, 148, 96], shade, 0.22);
+                ctx.lineWidth = 0.9;
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(2, 0);
+                ctx.quadraticCurveTo(48, -1, 88, 0);
+                ctx.strokeStyle = shadeRgb([114, 140, 88], shade, 0.36);
+                ctx.lineWidth = 1.4;
+                ctx.stroke();
+
+                ctx.lineWidth = 0.8;
+                ctx.strokeStyle = shadeRgb([110, 136, 84], shade, 0.24);
+                const veins = [
+                    [22, 0, 30, -18], [22, 0, 30, 18],
+                    [46, 0, 60, -21], [46, 0, 60, 21],
+                    [68, 0, 82, -8],  [68, 0, 82, 8]
+                ];
+                ctx.beginPath();
+                for (let i = 0; i < veins.length; i++) {
+                    ctx.moveTo(veins[i][0], veins[i][1]);
+                    ctx.lineTo(veins[i][2], veins[i][3]);
+                }
+                ctx.stroke();
+
+                ctx.restore();
+            }
+
+            /**
+             * Çiçek sapını ve yapraklarını çizer, sap ucunun koordinatını döndürür.
+             */
+            function drawStemAndFoliage(fl, stemProgress, swayX) {
+                const p = easeOutCubic(stemProgress);
+                const sx = fl.anchorX;
+                const sy = fl.anchorY;
+                const tx = fl.headX + swayX;
+                const ty = fl.headY + Math.abs(swayX) * 0.06;
+                const cx = fl.ctrlX + swayX * 0.45;
+                const cy = fl.ctrlY;
+
+                const ptAt = (t) => {
+                    const inv = 1 - t;
+                    return {
+                        x: inv * inv * sx + 2 * inv * t * cx + t * t * tx,
+                        y: inv * inv * sy + 2 * inv * t * cy + t * t * ty
+                    };
+                };
+
+                const tanAt = (t) => {
+                    const dx = 2 * (1 - t) * (cx - sx) + 2 * t * (tx - cx);
+                    const dy = 2 * (1 - t) * (cy - sy) + 2 * t * (ty - cy);
+                    return Math.atan2(dy, dx);
+                };
+
+                const shade = 0.48 + fl.depth * 0.52;
+                const steps = 28;
+                const maxStep = Math.floor(steps * p);
+
+                if (maxStep > 1) {
+                    const stemW = Math.max(2.6, fl.radius * (fl.bud ? 0.11 : 0.068));
+
+                    const grad = ctx.createLinearGradient(sx, sy, tx, ty);
+                    grad.addColorStop(0, shadeRgb([12, 22, 13], shade));
+                    grad.addColorStop(0.5, shadeRgb([28, 48, 28], shade));
+                    grad.addColorStop(1, shadeRgb([46, 72, 40], shade));
+
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(sx, sy);
+                    for (let i = 1; i <= maxStep; i++) {
+                        const pt = ptAt(i / steps);
+                        ctx.lineTo(pt.x, pt.y);
+                    }
+                    ctx.strokeStyle = grad;
+                    ctx.lineWidth = stemW;
+                    ctx.lineCap = 'round';
+                    ctx.stroke();
+
+                    // Silindirik 3D ışık parlaması
+                    ctx.strokeStyle = shadeRgb([112, 142, 88], shade, 0.22);
+                    ctx.lineWidth = Math.max(1, stemW * 0.28);
+                    ctx.beginPath();
+                    ctx.moveTo(sx - stemW * 0.22, sy);
+                    for (let i = 1; i <= maxStep; i++) {
+                        const pt = ptAt(i / steps);
+                        ctx.lineTo(pt.x - stemW * 0.22, pt.y);
+                    }
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                for (let i = 0; i < fl.leaves.length; i++) {
+                    const lf = fl.leaves[i];
+                    if (p > lf.t) {
+                        const lProg = clamp((p - lf.t) / (1 - lf.t + 0.12), 0, 1);
+                        const pt = ptAt(lf.t);
+                        const stemAngle = tanAt(lf.t);
+                        drawChrysanthemumLeaf(pt.x, pt.y, stemAngle + lf.angleOffset, lf.size, lProg, fl.depth);
+                    }
+                }
+
+                return ptAt(p);
+            }
+
+            /**
+             * Tek bir kasımpatının tüm taç yapraklarını (chiaroscuro gölge, damar, kenar ışığı) çizer.
+             */
+            function renderChrysanthemumGeometry(targetCtx, fl, bloomProgress) {
+                const v = fl.variety;
+                const depthLight = 0.62 + fl.depth * 0.42;
+                const R = fl.radius;
+
+                // Tomurcuk çanak yaprakları
+                if (fl.bud && bloomProgress > 0.05) {
+                    const calyxR = R * 0.72 * easeOutCubic(bloomProgress);
+                    targetCtx.save();
+                    for (let c = 0; c < 8; c++) {
+                        const ca = (c / 8) * Math.PI * 2 + 0.3;
+                        targetCtx.save();
+                        targetCtx.rotate(ca);
+                        const cg = targetCtx.createLinearGradient(0, 0, calyxR, 0);
+                        cg.addColorStop(0, shadeRgb([16, 30, 16], depthLight));
+                        cg.addColorStop(1, shadeRgb([48, 76, 40], depthLight));
+                        targetCtx.fillStyle = cg;
+                        targetCtx.beginPath();
+                        targetCtx.moveTo(0, 0);
+                        targetCtx.quadraticCurveTo(calyxR * 0.6, -calyxR * 0.28, calyxR * 1.15, 0);
+                        targetCtx.quadraticCurveTo(calyxR * 0.6, calyxR * 0.28, 0, 0);
+                        targetCtx.fill();
+                        targetCtx.restore();
+                    }
+                    targetCtx.restore();
+                }
+
+                // Merkez derin ortam gölgesi (ambient occlusion)
+                const coreShadowR = R * 0.65 * easeOutCubic(bloomProgress);
+                if (coreShadowR > 2) {
+                    const cGrad = targetCtx.createRadialGradient(0, 0, 0, 0, 0, coreShadowR);
+                    cGrad.addColorStop(0, 'rgba(0, 0, 0, 0.78)');
+                    cGrad.addColorStop(0.7, 'rgba(0, 0, 0, 0.34)');
+                    cGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                    targetCtx.fillStyle = cGrad;
+                    targetCtx.beginPath();
+                    targetCtx.arc(0, 0, coreShadowR, 0, Math.PI * 2);
+                    targetCtx.fill();
+                }
+
+                // Dıştan içe katmanlı taç yaprakları
+                const petals = fl.petals;
+                for (let i = 0; i < petals.length; i++) {
+                    const pt = petals[i];
+                    const localP = clamp((bloomProgress - pt.openDelay) / 0.56, 0, 1);
+                    if (localP <= 0.008) continue;
+
+                    const open = easeOutQuint(localP);
+                    const len = pt.lenNorm * R * open;
+                    const w = pt.widthNorm * R * (0.42 + 0.58 * open);
+                    const curveY = pt.curl * len * (0.35 + 0.65 * open);
+
+                    const directionalLight = 0.72 + pt.lightDot * 0.28;
+                    const layerElevation = 0.76 + pt.frac * 0.26;
+                    const totalLight = depthLight * directionalLight * layerElevation;
+
+                    const baseCol = pt.isHeart ? v.heartBase : v.shadowBase;
+                    const midCol = pt.isHeart ? v.heartTip : v.midBody;
+                    const tipCol = pt.isHeart ? v.heartTip : v.tipLight;
+
+                    targetCtx.save();
+                    targetCtx.rotate(pt.angle);
+
+                    // 1. Alt yaprağa düşen yumuşak temas gölgesi
+                    targetCtx.fillStyle = `rgba(0, 0, 0, ${(0.34 * open).toFixed(2)})`;
+                    targetCtx.beginPath();
+                    targetCtx.moveTo(0, 0);
+                    targetCtx.bezierCurveTo(
+                        len * 0.32, -w * 0.52 + curveY * 0.25 + 2.2,
+                        len * 0.78, -w * 0.66 + curveY * 0.85 + 2.4,
+                        len * 1.01, curveY + 2.2
+                    );
+                    targetCtx.bezierCurveTo(
+                        len * 0.78, w * 0.66 + curveY * 0.85 + 2.4,
+                        len * 0.32, w * 0.52 + curveY * 0.25 + 2.2,
+                        0, 0
+                    );
+                    targetCtx.fill();
+
+                    // 2. Kaşık / kavisli taç yaprak gövdesi
+                    const pGrad = targetCtx.createLinearGradient(0, 0, len, curveY);
+                    pGrad.addColorStop(0.00, shadeRgb(baseCol, totalLight * 0.62, 0.98));
+                    pGrad.addColorStop(0.32, shadeRgb(midCol, totalLight * 0.88, 0.96));
+                    pGrad.addColorStop(0.78, shadeRgb(tipCol, totalLight * 1.02, 0.97));
+                    pGrad.addColorStop(1.00, shadeRgb(v.vein, totalLight * (0.98 + pt.lightDot * 0.14), 0.99));
+
+                    targetCtx.fillStyle = pGrad;
+                    targetCtx.beginPath();
+                    targetCtx.moveTo(0, 0);
+                    targetCtx.bezierCurveTo(
+                        len * 0.28, -w * 0.44 * pt.cup + curveY * 0.22,
+                        len * 0.76, -w * 0.66 * pt.cup + curveY * 0.82,
+                        len, curveY
+                    );
+                    targetCtx.bezierCurveTo(
+                        len * 0.76, w * 0.66 * pt.cup + curveY * 0.82,
+                        len * 0.28, w * 0.44 * pt.cup + curveY * 0.22,
+                        0, 0
+                    );
+                    targetCtx.closePath();
+                    targetCtx.fill();
+
+                    // 3. İnce iç damar ışığı
+                    if (len > 14) {
+                        targetCtx.beginPath();
+                        targetCtx.moveTo(len * 0.16, 0);
+                        targetCtx.quadraticCurveTo(len * 0.56, curveY * 0.44, len * 0.90, curveY * 0.88);
+                        targetCtx.strokeStyle = shadeRgb(v.vein, totalLight * 1.05, 0.18 + Math.max(0, pt.lightDot) * 0.16);
+                        targetCtx.lineWidth = Math.max(0.55, w * 0.08);
+                        targetCtx.stroke();
+                    }
+
+                    // 4. Kıvrık uçta yumuşak kenar ışığı (rim highlight)
+                    if (pt.lightDot > -0.15) {
+                        targetCtx.strokeStyle = shadeRgb(v.vein, totalLight * 1.12, 0.12 + pt.lightDot * 0.16);
+                        targetCtx.lineWidth = 0.65;
+                        targetCtx.stroke();
+                    }
+
+                    targetCtx.restore();
+                }
+
+                // Kadifemsi çiçek kalbi
+                if (bloomProgress > 0.45) {
+                    const heartAlpha = easeOutCubic((bloomProgress - 0.45) / 0.55);
+                    const hr = R * 0.14 * heartAlpha;
+                    const hGrad = targetCtx.createRadialGradient(-hr * 0.2, -hr * 0.2, 0, 0, 0, hr * 1.4);
+                    hGrad.addColorStop(0, shadeRgb(v.heartTip, depthLight * 1.05, 0.65 * heartAlpha));
+                    hGrad.addColorStop(0.55, shadeRgb(v.heartBase, depthLight * 0.72, 0.45 * heartAlpha));
+                    hGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                    targetCtx.fillStyle = hGrad;
+                    targetCtx.beginPath();
+                    targetCtx.arc(0, 0, hr * 1.4, 0, Math.PI * 2);
+                    targetCtx.fill();
+                }
+            }
+
+            /**
+             * Çiçek başını çizer; tam açıldığında yüksek DPI önbellek kullanarak 60 FPS akıcılık sağlar.
+             */
+            function drawFlowerHead(fl, x, y, bloomProgress, timeSec) {
+                if (bloomProgress <= 0.008) return;
+
+                const breathe = 1 + 0.012 * Math.sin(timeSec * 1.15 + fl.swayPhase);
+                const rot = fl.tilt * 0.22 + fl.impulse * 0.015 + Math.sin(timeSec * fl.swaySpeed + fl.swayPhase) * 0.025;
+
+                if (bloomProgress >= 0.999) {
+                    if (!fl.cacheValid) {
+                        const pad = Math.ceil(fl.radius * 1.32);
+                        const size = pad * 2;
+                        fl.cacheSize = size;
+                        fl.cacheCanvas.width = Math.ceil(size * dpr);
+                        fl.cacheCanvas.height = Math.ceil(size * dpr);
+                        const cCtx = fl.cacheCanvas.getContext('2d');
+                        cCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                        cCtx.clearRect(0, 0, size, size);
+                        cCtx.translate(pad, pad);
+                        renderChrysanthemumGeometry(cCtx, fl, 1);
+                        fl.cacheValid = true;
+                    }
+
+                    ctx.save();
+                    ctx.translate(x, y);
+                    ctx.rotate(rot);
+                    ctx.scale(breathe, breathe);
+                    ctx.drawImage(fl.cacheCanvas, -fl.cacheSize / 2, -fl.cacheSize / 2, fl.cacheSize, fl.cacheSize);
+                    ctx.restore();
+                } else {
+                    ctx.save();
+                    ctx.translate(x, y);
+                    ctx.rotate(rot);
+                    ctx.scale(breathe, breathe);
+                    renderChrysanthemumGeometry(ctx, fl, bloomProgress);
+                    ctx.restore();
+                }
+            }
+
+            /**
+             * Dokunma/tıklama ile süzülen gerçekçi taç yaprakları üretir.
+             */
+            function spawnDriftingPetals(x, y, count = 5, variety = null) {
+                const roles = ['ivory', 'blush', 'champagne'];
+                const v = variety || VARIETIES[roles[Math.floor(Math.random() * roles.length)]];
+                for (let i = 0; i < count; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 0.45 + Math.random() * 1.15;
+                    fallingPetals.push({
+                        x: x + (Math.random() - 0.5) * 24,
+                        y: y + (Math.random() - 0.5) * 18,
+                        vx: Math.cos(angle) * speed * 0.7,
+                        vy: -0.35 + Math.random() * 0.75,
+                        length: 13 + Math.random() * 12,
+                        width: 4.5 + Math.random() * 3.5,
+                        rot: Math.random() * Math.PI * 2,
+                        rotSpeed: (Math.random() - 0.5) * 0.04,
+                        flutterPhase: Math.random() * Math.PI * 2,
+                        flutterSpeed: 1.8 + Math.random() * 1.6,
+                        alpha: 0.94,
+                        decay: 0.0028 + Math.random() * 0.002,
+                        variety: v
+                    });
+                }
+            }
+
+            function updateAndDrawFallingPetals(timeSec) {
+                for (let i = fallingPetals.length - 1; i >= 0; i--) {
+                    const p = fallingPetals[i];
+                    const flutter = Math.sin(timeSec * p.flutterSpeed + p.flutterPhase);
+                    p.x += p.vx + flutter * 0.48;
+                    p.y += p.vy + 0.42;
+                    p.vx *= 0.985;
+                    p.vy = Math.min(p.vy + 0.012, 1.05);
+                    p.rot += p.rotSpeed + flutter * 0.012;
+                    p.alpha -= p.decay;
+
+                    if (p.alpha <= 0.01 || p.y > height + 40) {
+                        fallingPetals.splice(i, 1);
+                        continue;
+                    }
+
+                    const v = p.variety;
+                    const scaleY = 0.45 + 0.55 * Math.abs(Math.cos(timeSec * p.flutterSpeed * 0.8 + p.flutterPhase));
+
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rot);
+                    ctx.scale(1, scaleY);
+
+                    const grad = ctx.createLinearGradient(-p.length * 0.5, 0, p.length * 0.5, 0);
+                    grad.addColorStop(0, shadeRgb(v.shadowBase, 0.85, p.alpha));
+                    grad.addColorStop(0.5, shadeRgb(v.midBody, 0.95, p.alpha));
+                    grad.addColorStop(1, shadeRgb(v.tipLight, 1.0, p.alpha));
+
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.moveTo(-p.length * 0.5, 0);
+                    ctx.bezierCurveTo(-p.length * 0.15, -p.width, p.length * 0.3, -p.width * 0.9, p.length * 0.5, 0);
+                    ctx.bezierCurveTo(p.length * 0.3, p.width * 0.9, -p.length * 0.15, p.width, -p.length * 0.5, 0);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+
+            /**
+             * Ana 60 FPS Animasyon Döngüsü (yalnızca 3. Adım açıldığında başlar)
+             */
+            function animate(now) {
+                const elapsedSec = (now - animStartTime) / 1000;
+                const timeSec = now / 1000;
+
+                ctx.clearRect(0, 0, width, height);
+                drawStudioAtmosphere(timeSec);
+
+                for (let i = 0; i < flowers.length; i++) {
+                    const fl = flowers[i];
+
+                    // Dokunma yay fiziği
+                    const springForce = -fl.impulse * 0.06;
+                    fl.impulseVel = (fl.impulseVel + springForce) * 0.91;
+                    fl.impulse += fl.impulseVel;
+
+                    // Hafif doğal esinti
+                    const wind = (Math.sin(timeSec * fl.swaySpeed + fl.swayPhase) * 4.0 +
+                                  Math.sin(timeSec * 0.35 + fl.swayPhase * 0.5) * 2.2) * fl.depth;
+
+                    // ~4.5 saniyelik organik büyüme ve açılış zamanlaması
+                    const stemProg = clamp((elapsedSec - fl.delay * 0.8) / 1.65, 0, 1);
+                    const bloomProg = clamp((elapsedSec - 1.15 - fl.delay * 1.15) / 2.95, 0, 1);
+                    const swayAmp = easeInOutSine(clamp((elapsedSec - 1.2) / 2.2, 0, 1));
+
+                    const tip = drawStemAndFoliage(fl, stemProg, (wind + fl.impulse) * swayAmp);
+                    fl.currentX = tip.x;
+                    fl.currentY = tip.y;
+
+                    drawFlowerHead(fl, tip.x, tip.y, bloomProg, timeSec);
+                }
+
+                updateAndDrawFallingPetals(timeSec);
+
+                // Çiçekler açılmaya başladıktan ~2.2 saniye sonra kenar notu yumuşakça belirsin
+                if (!noteRevealed && elapsedSec > 2.2) {
+                    noteRevealed = true;
+                    poeticNote.classList.add('visible');
+                }
+
+                requestAnimationFrame(animate);
+            }
+
+            function startBouquetAnimation() {
+                if (sceneStarted) return;
+                sceneStarted = true;
+                resizeCanvas();
+                animStartTime = performance.now();
+                requestAnimationFrame(animate);
+            }
+
+            // Ekrana dokunma etkileşimi: hafif dalgalanma ve süzülen taç yaprakları
+            canvas.addEventListener('pointerdown', (e) => {
+                if (!sceneStarted) return;
+
+                // Nadir durumlarda JSONP geç geldiyse dokunuşla da müziği güvenle başlat
+                if (shouldPlayWhenReady && !musicStarted && resolvedAudioUrl) {
+                    startMusicWithFadeIn();
+                }
+
+                const x = e.clientX;
+                const y = e.clientY;
+                let hitFlower = null;
+
+                for (let i = flowers.length - 1; i >= 0; i--) {
+                    const fl = flowers[i];
+                    const dist = Math.hypot(x - (fl.currentX || fl.headX), y - (fl.currentY || fl.headY));
+                    if (dist < fl.radius * 1.05) {
+                        hitFlower = fl;
+                        break;
+                    }
+                }
+
+                if (hitFlower) {
+                    const dir = x < (hitFlower.currentX || hitFlower.headX) ? 1 : -1;
+                    hitFlower.impulseVel += dir * 3.8;
+                    flowers.forEach((other) => {
+                        if (other !== hitFlower && other.bunch === hitFlower.bunch) {
+                            other.impulseVel += dir * 1.4;
+                        }
+                    });
+                    spawnDriftingPetals(x, y, 6, hitFlower.variety);
+                } else {
+                    spawnDriftingPetals(x, y, 4, null);
+                }
+            });
+
+            window.addEventListener('resize', () => {
+                if (sceneStarted) {
+                    resizeCanvas();
+                }
+            });
+
+            // Sayfa açılır açılmaz ses kaynağını arka planda sessizce hazırla
+            window.onload = () => {
+                preloadAudioSource();
+            };
+        })();
+    </script>
+</body>
+</html>
             width: 100%;
             height: 100%;
             height: 100dvh;
